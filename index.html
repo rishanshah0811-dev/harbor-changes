@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Plain-language record of code changes to Harbor.">
+<title>Harbor changes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..700,50,1&family=Newsreader:opsz,wght@6..72,300..600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f3ed;
+    --surface: #fffdf9;
+    --ink: #1b1917;
+    --ink-soft: #4a443c;
+    --muted: #7c746a;
+    --rule: #e2dbd0;
+    --accent: #b4441f;
+
+    --capability: #1f6b4a;
+    --fix: #b4441f;
+    --safeguard: #7a4fa3;
+    --groundwork: #4a6fa5;
+    --housekeeping: #7c746a;
+
+    --measure: 62ch;
+    --radius: 12px;
+    --ease: cubic-bezier(.22,.61,.36,1);
+    --fast: .24s;
+    --slow: .62s;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #15140f;
+      --surface: #1e1c18;
+      --ink: #ece6dc;
+      --ink-soft: #c2bab0;
+      --muted: #948c81;
+      --rule: #2f2b25;
+      --accent: #e5854f;
+
+      --capability: #6fb894;
+      --fix: #e5854f;
+      --safeguard: #b492d6;
+      --groundwork: #86a9d8;
+      --housekeeping: #948c81;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 300 clamp(1rem, 0.96rem + 0.2vw, 1.0625rem)/1.7 "Newsreader", Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Paper grain and a warm wash from the top, so the page has depth without
+     an image request. */
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 74ch; margin: 0 auto; padding: clamp(28px, 6vw, 72px) clamp(18px, 5vw, 32px) 96px; }
+
+  /* --- header --- */
+
+  header { margin-bottom: clamp(28px, 5vw, 40px); }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600; font-size: clamp(1.5rem, 1.25rem + 1.2vw, 1.95rem);
+    line-height: 1.15; letter-spacing: -.015em; margin: 0 0 8px;
+    font-variation-settings: "SOFT" 50, "WONK" 1;
+    animation: rise var(--slow) var(--ease) both;
+  }
+
+  .intro {
+    max-width: var(--measure); color: var(--ink-soft); margin: 0 0 6px;
+    animation: rise var(--slow) var(--ease) .06s both;
+  }
+
+  .updated {
+    color: var(--muted); font-size: .82rem; margin: 0;
+    animation: rise var(--slow) var(--ease) .12s both;
+  }
+
+  /* --- filters --- */
+
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid var(--rule);
+    animation: rise var(--slow) var(--ease) .18s both;
+  }
+
+  .filter {
+    font: 400 .82rem/1 "Newsreader", serif; color: var(--ink-soft);
+    background: transparent; border: 1px solid var(--rule);
+    border-radius: 99px; padding: 8px 14px; cursor: pointer;
+    transition: color var(--fast) var(--ease), border-color var(--fast) var(--ease),
+                background var(--fast) var(--ease), transform var(--fast) var(--ease);
+  }
+  .filter em { font-style: normal; color: var(--muted); margin-left: 5px; font-size: .92em; }
+  .filter:hover { transform: translateY(-1px); border-color: var(--accent); color: var(--accent); }
+  .filter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .filter.is-on {
+    background: var(--ink); border-color: var(--ink); color: var(--paper);
+  }
+  .filter.is-on em { color: color-mix(in srgb, var(--paper) 70%, transparent); }
+
+  /* --- days --- */
+
+  .day { margin-top: clamp(38px, 7vw, 58px); }
+
+  .day > h2 {
+    display: flex; align-items: baseline; gap: 14px;
+    font-family: "Fraunces", Georgia, serif; font-weight: 500;
+    font-size: 1.02rem; letter-spacing: .01em; color: var(--ink);
+    margin: 0 0 22px; padding-bottom: 10px; border-bottom: 1px solid var(--rule);
+  }
+  .day > h2 small {
+    margin-left: auto; font-family: "Newsreader", serif; font-weight: 300;
+    font-size: .8rem; color: var(--muted); white-space: nowrap;
+  }
+
+  /* The timeline rule. Sits behind the markers and stops short at the bottom so
+     it reads as a thread rather than a border. */
+  .entries { position: relative; padding-left: 30px; }
+  .entries::before {
+    content: ""; position: absolute; left: 5px; top: 12px; bottom: 14px;
+    width: 1px; background: linear-gradient(var(--rule), transparent);
+  }
+
+  .entry { position: relative; padding: 0 0 30px; }
+  .entry:last-child { padding-bottom: 4px; }
+
+  .marker {
+    position: absolute; left: -30px; top: 9px;
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--paper); border: 2px solid var(--rule);
+    transition: border-color var(--fast) var(--ease), transform var(--fast) var(--ease);
+  }
+  .entry:hover .marker { border-color: var(--accent); transform: scale(1.25); }
+
+  .entry-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 9px; }
+
+  .chip {
+    font: 500 .7rem/1 "Newsreader", serif; letter-spacing: .09em;
+    text-transform: uppercase; padding: 5px 10px; border-radius: 5px;
+    color: var(--paper);
+  }
+  .chip.capability   { background: var(--capability); }
+  .chip.fix          { background: var(--fix); }
+  .chip.safeguard    { background: var(--safeguard); }
+  .chip.groundwork   { background: var(--groundwork); }
+  .chip.housekeeping { background: var(--housekeeping); }
+
+  .badge {
+    font: 400 .7rem/1 "Newsreader", serif; letter-spacing: .07em;
+    text-transform: uppercase; padding: 4px 9px; border-radius: 5px;
+    border: 1px solid var(--rule); color: var(--muted); cursor: help;
+  }
+  .badge.live {
+    color: var(--capability);
+    border-color: color-mix(in srgb, var(--capability) 45%, transparent);
+  }
+
+  .entry h3 {
+    font-family: "Fraunces", Georgia, serif; font-weight: 600;
+    font-size: clamp(1.18rem, 1.06rem + 0.5vw, 1.42rem); line-height: 1.28;
+    letter-spacing: -.01em; margin: 0 0 8px; text-wrap: balance;
+    font-variation-settings: "SOFT" 50, "WONK" 1;
+  }
+
+  .body { max-width: var(--measure); color: var(--ink-soft); margin: 0; }
+
+  .entry-foot { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-top: 12px; }
+
+  .area, .churn {
+    font: 400 .74rem/1 "Newsreader", serif; color: var(--muted);
+    padding: 4px 9px; border-radius: 99px;
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+  }
+  .churn { background: transparent; padding-left: 2px; cursor: help; }
+
+  .day.empty .body { color: var(--muted); }
+
+  /* --- motion --- */
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .reveal {
+    opacity: 0; transform: translateY(18px);
+    transition: opacity var(--slow) var(--ease), transform var(--slow) var(--ease);
+    transition-delay: calc(var(--stagger, 0) * 60ms);
+  }
+  .reveal.seen { opacity: 1; transform: none; }
+
+  .entry[hidden] { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-delay: 0s !important;
+      transition-duration: .01ms !important;
+      transition-delay: 0s !important;
+    }
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 520px) {
+    .entries { padding-left: 22px; }
+    .marker { left: -22px; }
+    .day > h2 { flex-wrap: wrap; }
+    .day > h2 small { margin-left: 0; }
+  }
+</style>
+<noscript><style>
+  /* The reveal animation is driven by JS adding .seen. With JS off nothing would
+     ever add it and the page would render blank, so opt out of the animation
+     entirely rather than trusting it to arrive. The log stays readable; only the
+     category filter (which is JS) is unavailable. */
+  .reveal { opacity: 1 !important; transform: none !important; }
+  .filters { display: none; }
+</style></noscript>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Harbor changes</h1>
+    <p class="updated">Updated 11 September 2026 at 21:19 HKT. </p>
+    <div class="filters" role="group" aria-label="Filter changes by type">
+          
+    </div>
+  </header>
+
+  <main id="log">
+      <section class="day empty">
+        <h2><span>Nothing yet</span></h2>
+        <p class="body">The first code change pushed from here will appear on this
+        page within a few minutes of being pushed.</p>
+      </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var entries = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+
+  // Scroll reveal. Without IntersectionObserver (or with reduced motion) every
+  // entry is simply shown, so the page never depends on JS to be readable.
+  if (reduced || !("IntersectionObserver" in window)) {
+    entries.forEach(function (el) { el.classList.add("seen"); });
+  } else {
+    var io = new IntersectionObserver(function (rows) {
+      rows.forEach(function (row) {
+        if (row.isIntersecting) { row.target.classList.add("seen"); io.unobserve(row.target); }
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+    entries.forEach(function (el) { io.observe(el); });
+  }
+
+  var buttons = document.querySelectorAll(".filter");
+  var articles = document.querySelectorAll(".entry");
+  var days = document.querySelectorAll(".day");
+
+  function apply(want) {
+    articles.forEach(function (el) {
+      el.hidden = want !== "all" && el.dataset.category !== want;
+      if (!el.hidden) { el.classList.add("seen"); }
+    });
+    // A day whose every entry is filtered out hides its own heading too,
+    // otherwise the page reads as a list of empty dates.
+    days.forEach(function (day) {
+      var shown = day.querySelectorAll(".entry:not([hidden])").length;
+      day.hidden = day.querySelectorAll(".entry").length > 0 && shown === 0;
+    });
+  }
+
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      buttons.forEach(function (other) {
+        var on = other === button;
+        other.classList.toggle("is-on", on);
+        other.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      apply(button.dataset.filter);
+    });
+  });
+})();
+</script>
+</body>
+</html>
